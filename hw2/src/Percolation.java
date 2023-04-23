@@ -1,99 +1,102 @@
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
-// TODO: Add any other necessary imports.
 
 public class Percolation {
-    // TODO: Add any necessary instance variables.
 
     private boolean grids[][];
     private WeightedQuickUnionUF weightedQuickUnionUF;
     private int COLUMNS;
     private int ROWS;
+
     /*
      TreeGrids represent a tree of grids that have a root.
      */
     private int count; // count number of open sites;
 
     public Percolation(int N) {
-        // TODO: Fill in this constructor.
-        grids = new boolean[N][N];
-        weightedQuickUnionUF = new WeightedQuickUnionUF(N * N);
+        grids = new boolean[N][N + 2];
+        int c = (N * N) + 2;
+
+        weightedQuickUnionUF = new WeightedQuickUnionUF(c);
 
         COLUMNS = N;
         ROWS = N;
-
+        open(0, N + 1);
+        open(ROWS - 1, N + 1);
     }
 
     public void open(int row, int col) {
         grids[row][col] = true;
-        count = count + 1;
-        boolean top = false;
-        boolean left = false;
-        boolean right = false;
-        boolean bottom = false;
+        if (col != COLUMNS + 1) {
+            count = count + 1;
 
-        if (row - 1 >= 0) {
-            top = isOpen(row - 1, col);
+            boolean top = false;
+            boolean left = false;
+            boolean right = false;
+            boolean bottom = false;
+
+            if (row - 1 >= 0) {
+                top = isOpen(row - 1, col);
+
+            }
+            if (col - 1 >= 0) {
+                left = isOpen(row, col - 1);
+            }
+            if (col + 1 <= COLUMNS - 1) {
+                right = isOpen(row, col + 1);
+            }
+            if (row + 1 <= ROWS - 1) {
+                bottom = isOpen(row + 1, col);
+            }
+
+            conductUnion(top, left, right, bottom, row, col);
 
         }
-        if(col-1 >=0){
-            left=isOpen(row,col-1);
-        }
-        if(col+1 <= COLUMNS){
-            right=isOpen(row,col+1);
-        }
-        if(row+1 <=ROWS){
-            bottom=isOpen(row+1,col);
-        }
 
-        conductUnion(top,left,right,bottom,row,col);
     }
 
 
-    private void conductUnion(boolean top,boolean left,boolean right,boolean bottom,int row,int col){
-        int p = xyTo1D(row,col);
-        if(top){
+    private void conductUnion(boolean top, boolean left, boolean right, boolean bottom, int row, int col) {
+        int p = xyTo1D(row, col);
+
+
+        if (row == ROWS - 1 && isFull(row,col)) {
+            weightedQuickUnionUF.union(xyTo1D(ROWS - 1, COLUMNS + 1), xyTo1D(ROWS - 1, col));
+        } else if (row == 0) {
+
+            weightedQuickUnionUF.union(xyTo1D(0, COLUMNS + 1), xyTo1D(0, col));
+        }
+
+        if (top) {
             int q = xyTo1D(row - 1, col);
-            weightedQuickUnionUF.union(p,q);
+            weightedQuickUnionUF.union(p, q);
         }
-        if(bottom){
-            int q = xyTo1D(row+1,col);
-            weightedQuickUnionUF.union(p,q);
+        if (bottom) {
+            int q = xyTo1D(row + 1, col);
+            weightedQuickUnionUF.union(p, q);
         }
-        if(left){
-            int q = xyTo1D(row,col-1);
-            weightedQuickUnionUF.union(p,q);
-        }if(right){
-            int q = xyTo1D(row,col+1);
-            weightedQuickUnionUF.union(p,q);
+        if (left) {
+            int q = xyTo1D(row, col - 1);
+            weightedQuickUnionUF.union(p, q);
+        }
+        if (right) {
+            int q = xyTo1D(row, col + 1);
+            weightedQuickUnionUF.union(p, q);
         }
 
     }
+
     public boolean isOpen(int row, int col) {
         // TODO: Fill in this method.
         return grids[row][col];
     }
 
-    public WeightedQuickUnionUF getWeightedQuickUnionUF(){
+    public WeightedQuickUnionUF getWeightedQuickUnionUF() {
         return this.weightedQuickUnionUF;
     }
 
-    public boolean isFull(int row, int col) {
-        boolean boolIsFull = false;
-        if(row == 0){
-                for(int i=0;i<=col;i++){
-                    boolIsFull = boolIsFull || isOpen(row,i);
-                }
-                boolIsFull = boolIsFull && isOpen(row, col);
-                if(boolIsFull)
-                    return true;
-        }else{
-            for(int i=0;i<=col;i++){
-                if(weightedQuickUnionUF.connected(xyTo1D(0,i),xyTo1D(row,col)) && isOpen(0,i) && isOpen(row,col))
-                    return true;
-            }
 
-        }
-        return false;
+    public boolean isFull(int row, int col) {
+        return weightedQuickUnionUF.connected(xyTo1D(0, COLUMNS + 1), xyTo1D(row, col)) && isOpen(row, col);
     }
 
     public int numberOfOpenSites() {
@@ -102,8 +105,7 @@ public class Percolation {
     }
 
     public boolean percolates() {
-        // TODO: Fill in this method.
-        return false;
+        return weightedQuickUnionUF.connected(xyTo1D(0, COLUMNS + 1), xyTo1D(ROWS - 1, COLUMNS + 1));
     }
 
 
